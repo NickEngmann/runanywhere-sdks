@@ -48,3 +48,6 @@ project(":runanywhere-core-onnx").projectDir =
 include(":runanywhere-core-rag")
 project(":runanywhere-core-rag").projectDir =
     file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-rag")
+
+// Pure JVM tests (no Android SDK required)
+include(":tests-jvm")
