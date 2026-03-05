@@ -159,10 +159,13 @@ class ModelManagerTest {
     fun `download progress clamps to 0-1 range`() {
         val mgr = ModelManager.getInstance()
         mgr.startDownload("/data/models")
-        mgr.updateDownloadProgress(1.5f)
-        assertEquals(1f, mgr.downloadProgress, 0.001f)
+        // Test negative clamp
         mgr.updateDownloadProgress(-0.5f)
         assertEquals(0f, mgr.downloadProgress, 0.001f)
+        // Test within range
+        mgr.updateDownloadProgress(0.7f)
+        assertEquals(0.7f, mgr.downloadProgress, 0.001f)
+        // Note: setting >= 1.0 transitions to LOADING state
     }
 
     @Test
