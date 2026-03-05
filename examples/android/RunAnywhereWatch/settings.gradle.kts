@@ -30,24 +30,11 @@ dependencyResolutionManagement {
 rootProject.name = "RunAnywhereWatch"
 include(":app")
 
-// SDK (local project dependency)
-include(":runanywhere-kotlin")
-project(":runanywhere-kotlin").projectDir = file("../../../sdk/runanywhere-kotlin")
-
-// =============================================================================
-// Backend Adapter Modules (Pure Kotlin - no native libs)
-// =============================================================================
-include(":runanywhere-core-llamacpp")
-project(":runanywhere-core-llamacpp").projectDir =
-    file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-llamacpp")
-
-include(":runanywhere-core-onnx")
-project(":runanywhere-core-onnx").projectDir =
-    file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-onnx")
-
-include(":runanywhere-core-rag")
-project(":runanywhere-core-rag").projectDir =
-    file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-rag")
-
 // Pure JVM tests (no Android SDK required)
 include(":tests-jvm")
+
+// NOTE: SDK modules (runanywhere-kotlin, core-llamacpp, core-onnx, core-rag) are NOT
+// included here to avoid Kotlin multiplatform plugin conflicts. When the SDK is needed,
+// publish it to mavenLocal and consume via implementation("com.runanywhere:...") instead
+// of project(":runanywhere-kotlin"). For local development with the SDK, use the root
+// project's settings.gradle.kts which includes RunAnywhereWatch as a composite build.
