@@ -30,24 +30,28 @@ dependencyResolutionManagement {
 rootProject.name = "RunAnywhereWatch"
 include(":app")
 
-// SDK (local project dependency)
-include(":runanywhere-kotlin")
-project(":runanywhere-kotlin").projectDir = file("../../../sdk/runanywhere-kotlin")
+// SDK (local project dependency) - EXCLUDED FOR TESTS
+// include(":runanywhere-kotlin")
+// project(":runanywhere-kotlin").projectDir = file("../../../sdk/runanywhere-kotlin")
 
 // =============================================================================
-// Backend Adapter Modules (Pure Kotlin - no native libs)
+// Backend Adapter Modules (Pure Kotlin - no native libs) - EXCLUDED FOR TESTS
 // =============================================================================
-include(":runanywhere-core-llamacpp")
-project(":runanywhere-core-llamacpp").projectDir =
-    file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-llamacpp")
+// include(":runanywhere-core-llamacpp")
+// project(":runanywhere-core-llamacpp").projectDir =
+//     file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-llamacpp")
 
-include(":runanywhere-core-onnx")
-project(":runanywhere-core-onnx").projectDir =
-    file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-onnx")
+// include(":runanywhere-core-onnx")
+// project(":runanywhere-core-onnx").projectDir =
+//     file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-onnx")
 
-include(":runanywhere-core-rag")
-project(":runanywhere-core-rag").projectDir =
-    file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-rag")
+// include(":runanywhere-core-rag")
+// project(":runanywhere-core-rag").projectDir =
+//     file("../../../sdk/runanywhere-kotlin/modules/runanywhere-core-rag")
 
 // Pure JVM tests (no Android SDK required)
 include(":tests-jvm")
+
+// Android SDK module
+include(":sdks:android:runanywhere")
+project(":sdks:android:runanywhere").projectDir = file("../../../sdk/android/runanywhere")
