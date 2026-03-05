@@ -392,3 +392,12 @@ sdk/runanywhere-react-native/packages/rag/ios/.testlocal
 node_modules/
 /tools/
 *.trace
+
+# Auto-added by Marisol pipeline
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+debug_*.py
+.cache/
+*.egg-info/
