@@ -45,7 +45,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":sdks:android:runanywhere"))
+    // SDK dependency - uncomment when SDK module is available locally
+    // implementation(project(":sdks:android:runanywhere"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
