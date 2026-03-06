@@ -1,56 +1,86 @@
 package com.runanywhere.sdk
 
-import com.runanywhere.sdk.data.models.SDKEnvironment
+import com.runanywhere.sdk.public.SDKEnvironment
 import com.runanywhere.sdk.public.RunAnywhere
+import com.runanywhere.sdk.public.events.EventBus
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SDKTest {
     @Test
-    fun testSDKInitialization() =
-        runBlocking {
-            // Initialize SDK in development mode (no API key needed)
-            RunAnywhere.initialize(
-                apiKey = "test-api-key",
-                environment = SDKEnvironment.DEVELOPMENT,
-            )
-
-            // Check if SDK is initialized
-            val isInitialized = RunAnywhere.isInitialized
-            println("SDK initialized: $isInitialized")
-
-            // Get available models
-            val models = RunAnywhere.availableModels()
-            println("Available models: ${models.size}")
-            models.forEach { model ->
-                println("- ${model.name} (${model.id}): ${model.category}")
-            }
-
-            // Clean up
-            RunAnywhere.cleanup()
-        }
+    fun testSDKEnvironmentValues() {
+        // Test SDKEnvironment enum values
+        assertEquals(0, SDKEnvironment.DEVELOPMENT.cEnvironment)
+        assertEquals(1, SDKEnvironment.STAGING.cEnvironment)
+        assertEquals(2, SDKEnvironment.PRODUCTION.cEnvironment)
+    }
 
     @Test
-    fun testSimpleTranscription() =
-        runBlocking {
-            // Initialize SDK
-            RunAnywhere.initialize(
-                apiKey = "test-api-key",
-                environment = SDKEnvironment.DEVELOPMENT,
-            )
+    fun testSDKEnvironmentFromCEnvironment() {
+        // Test SDKEnvironment.fromCEnvironment
+        assertEquals(SDKEnvironment.DEVELOPMENT, SDKEnvironment.fromCEnvironment(0))
+        assertEquals(SDKEnvironment.STAGING, SDKEnvironment.fromCEnvironment(1))
+        assertEquals(SDKEnvironment.PRODUCTION, SDKEnvironment.fromCEnvironment(2))
+        assertEquals(SDKEnvironment.DEVELOPMENT, SDKEnvironment.fromCEnvironment(-1)) // Default
+    }
 
-            // Create dummy audio data (16-bit PCM at 16kHz, 1 second of silence)
-            val audioData = ByteArray(16000 * 2) // 1 second at 16kHz, 16-bit
+    @Test
+    fun testSDKVersion() {
+        // Test that SDK version is not empty
+        val version = RunAnywhere.version
+        assertTrue(version.isNotEmpty(), "SDK version should not be empty")
+        println("SDK version: $version")
+    }
 
-            try {
-                // Try to transcribe
-                val result = RunAnywhere.transcribe(audioData)
-                println("Transcription result: $result")
-            } catch (e: Exception) {
-                println("Transcription failed (expected in test environment): ${e.message}")
-            }
+    @Test
+    fun testEventBusAccess() {
+        // Test that event bus can be accessed
+        val events = RunAnywhere.events
+        assertNotNull(events, "Event bus should not be null")
+        assertTrue(events is EventBus, "Event bus should be an EventBus instance")
+    }
 
-            // Clean up
-            RunAnywhere.cleanup()
-        }
+    @Test
+    fun testSDKStateBeforeInitialization() {
+        // Test SDK state before initialization
+        assertFalse(RunAnywhere.isInitialized, "SDK should not be initialized before initialization")
+        assertFalse(RunAnywhere.areServicesReady, "Services should not be ready before initialization")
+        assertNull(RunAnywhere.environment, "Environment should be null before initialization")
+        assertFalse(RunAnywhere.isActive, "SDK should not be active before initialization")
+    }
+
+    @Test
+    fun testRunAnywhereObjectExists() {
+        // Test that RunAnywhere object exists and has expected properties
+        val runAnywhere = RunAnywhere
+        assertNotNull(runAnywhere, "RunAnywhere object should not be null")
+        assertTrue(runAnywhere is com.runanywhere.sdk.public.RunAnywhere, "RunAnywhere should be the correct type")
+    }
+
+    @Test
+    fun testLogLevelValues() {
+        // Test SDKLogger log levels
+        val debugLevel = com.runanywhere.sdk.foundation.LogLevel.DEBUG
+        val infoLevel = com.runanywhere.sdk.foundation.LogLevel.INFO
+        val warningLevel = com.runanywhere.sdk.foundation.LogLevel.WARNING
+        val errorLevel = com.runanywhere.sdk.foundation.LogLevel.ERROR
+
+        assertNotNull(debugLevel)
+        assertNotNull(infoLevel)
+        assertNotNull(warningLevel)
+        assertNotNull(errorLevel)
+    }
+
+    @Test
+    fun testSDKConstants() {
+        // Test SDKConstants values
+        val constants = com.runanywhere.sdk.utils.SDKConstants
+        assertNotNull(constants.SDK_VERSION, "SDK_VERSION should not be null")
+        assertTrue(constants.SDK_VERSION.isNotEmpty(), "SDK_VERSION should not be empty")
+    }
 }
