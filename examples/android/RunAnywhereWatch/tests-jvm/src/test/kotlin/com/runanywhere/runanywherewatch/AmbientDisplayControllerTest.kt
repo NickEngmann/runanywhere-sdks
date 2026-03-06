@@ -595,7 +595,7 @@ class BatteryMonitorTest {
     }
 
     @Test
-    fun `initial state is 100% battery not charging`() {
+    fun `initial state is 100 percent battery not charging`() {
         assertEquals(100, monitor.batteryLevel)
         assertFalse(monitor.isCharging)
     }

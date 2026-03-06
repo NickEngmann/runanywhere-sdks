@@ -290,24 +290,24 @@ class WatchFaceUI {
     var onCameraClick: (() -> Unit)? = null
 
     fun formatTime(timestamp: Long): String {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        val format = java.text.SimpleDateFormat("HH:mm", Locale.getDefault())
-        return format.format(calendar.time)
+        val instant = java.time.Instant.ofEpochMilli(timestamp)
+        val zoneId = java.time.ZoneId.systemDefault()
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+        return java.time.ZonedDateTime.ofInstant(instant, zoneId).format(formatter)
     }
 
     fun formatDate(timestamp: Long): String {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        val format = java.text.SimpleDateFormat("EEEE, MMM d", Locale.getDefault())
-        return format.format(calendar.time)
+        val instant = java.time.Instant.ofEpochMilli(timestamp)
+        val zoneId = java.time.ZoneId.systemDefault()
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM d", Locale.getDefault())
+        return java.time.ZonedDateTime.ofInstant(instant, zoneId).format(formatter)
     }
 
     fun formatSeconds(timestamp: Long): String {
-        val calendar = Calendar.getInstance()
-        calendar.timeInMillis = timestamp
-        val format = java.text.SimpleDateFormat("ss", Locale.getDefault())
-        return ":${format.format(calendar.time)}"
+        val instant = java.time.Instant.ofEpochMilli(timestamp)
+        val zoneId = java.time.ZoneId.systemDefault()
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("ss")
+        return ":${java.time.ZonedDateTime.ofInstant(instant, zoneId).format(formatter)}"
     }
 
     fun getBatteryColor(level: Int): String {
