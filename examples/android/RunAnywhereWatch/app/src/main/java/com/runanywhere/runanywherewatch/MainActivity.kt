@@ -4,6 +4,25 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,6 +45,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class MainActivity : ComponentActivity() {
+    private val transcriptionViewModel by lazy { TranscriptionViewModel() }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -34,7 +55,10 @@ class MainActivity : ComponentActivity() {
                     onMicClick = { handleMicClick() },
                     onCameraClick = { handleCameraClick() },
                     onVisionQuery = { query -> handleVisionQuery(query) },
-                    onPhotoCaptured = { photoFile -> handlePhotoCaptured(photoFile) }
+                    onPhotoCaptured = { photoFile -> handlePhotoCaptured(photoFile) },
+                    onTranscriptionClick = { /* Handled internally */ },
+                    onTranscriptionDismiss = { /* Handled internally */ },
+                    transcriptionViewModel = transcriptionViewModel
                 )
             }
         }
@@ -47,6 +71,10 @@ class MainActivity : ComponentActivity() {
             // Start voice input flow
             // In real app: start STT, capture audio, send to LLM
             showQueryInput("Ask about this...")
+            
+            // Simulate transcription
+            transcriptionViewModel.addTranscription("Voice input started...")
+            transcriptionViewModel.updateConnectionStatus(ConnectionStatus.CONNECTED)
         }
     }
     
@@ -91,7 +119,10 @@ fun WatchFaceScreen(
     onMicClick: (Context) -> Unit,
     onCameraClick: (Context) -> Unit,
     onVisionQuery: (String) -> Unit,
-    onPhotoCaptured: (java.io.File) -> Unit
+    onPhotoCaptured: (java.io.File) -> Unit,
+    onTranscriptionClick: () -> Unit,
+    onTranscriptionDismiss: () -> Unit,
+    transcriptionViewModel: TranscriptionViewModel
 ) {
     val context = LocalContext.current
     var sdkStatus by remember { mutableStateOf(SDKStatus.NOT_LOADED) }
@@ -99,6 +130,13 @@ fun WatchFaceScreen(
     var showCameraOverlay by remember { mutableStateOf(false) }
     var cameraManager by remember { mutableStateOf<CameraManager?>(null) }
     var visionResponse by remember { mutableStateOf<String?>(null) }
+    var showTranscriptionScreen by remember { mutableStateOf(false) }
+    
+    // Simulate incoming transcriptions from STT pipeline
+    LaunchedEffect(Unit) {
+        // In real app: subscribe to STT pipeline transcription events
+        // For now, we'll add sample transcriptions when mic is clicked
+    }
     
     // Initialize SDK
     LaunchedEffect(Unit) {
@@ -241,6 +279,27 @@ fun WatchFaceScreen(
                     )
                 }
             }
+            
+            // Transcription button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                OutlinedButton(
+                    onClick = { showTranscriptionScreen = true },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color(0xFF1A1A1A)
+                    )
+                ) {
+                    Text(
+                        "📝 Transcriptions",
+                        fontSize = 14.sp
+                    )
+                }
+            }
         }
         
         // Circular border for round screen
@@ -309,6 +368,14 @@ fun WatchFaceScreen(
                 }
             }
         }
+        
+        // Transcription Screen Overlay
+        if (showTranscriptionScreen) {
+            TranscriptionScreenOverlay(
+                viewModel = transcriptionViewModel,
+                onDismiss = { showTranscriptionScreen = false }
+            )
+        }
     }
 }
 
@@ -356,4 +423,112 @@ fun getCurrentSeconds(): String {
     val calendar = Calendar.getInstance()
     val format = SimpleDateFormat("ss", Locale.getDefault())
     return ":${format.format(calendar.time)}"
+}
+
+/**
+ * Overlay composable for displaying transcription screen
+ */
+@Composable
+fun TranscriptionScreenOverlay(
+    viewModel: TranscriptionViewModel,
+    onDismiss: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.9f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            // Header with close button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Live Transcriptions",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF00E5FF)
+                )
+                
+                IconButton(onClick = onDismiss) {
+                    Text(
+                        text = "✕",
+                        fontSize = 24.sp,
+                        color = Color.White
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Connection status
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                ConnectionStatusIndicator(
+                    status = viewModel.connectionStatus,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Transcription list
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(viewModel.transcriptions.size) { index ->
+                    val entry = viewModel.transcriptions[index]
+                    TranscriptionEntryItem(
+                        entry = entry,
+                        modifier = Modifier.animateItem()
+                    )
+                }
+                
+                if (viewModel.transcriptions.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No transcriptions yet",
+                                fontSize = 14.sp,
+                                color = Color.Gray,
+                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Clear button
+            Spacer(modifier = Modifier.weight(1f))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                OutlinedButton(
+                    onClick = { viewModel.clearTranscriptions() },
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color(0xFF1A1A1A)
+                    )
+                ) {
+                    Text(
+                        text = "Clear Transcriptions",
+                        fontSize = 14.sp
+                    )
+                }
+            }
+        }
+    }
 }
