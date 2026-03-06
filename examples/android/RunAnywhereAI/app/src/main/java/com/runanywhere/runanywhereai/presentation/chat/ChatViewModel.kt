@@ -79,7 +79,7 @@ data class ChatUiState(
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val app = application as RunAnywhereApplication
     private val conversationStore = ConversationStore.getInstance(application)
-    private val tokensPerSecondHistory = java.util.concurrent.CopyOnWriteArrayList<Double>()
+    private val tokensPerSecondHistory = mutableListOf<Double>()
 
     private val _uiState = MutableStateFlow(ChatUiState())
     val uiState: StateFlow<ChatUiState> = _uiState.asStateFlow()
@@ -171,17 +171,15 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         // Add user message
         val userMessage = ChatMessage.user(prompt)
 
-        _uiState.value =
-            _uiState.value.copy(
-                messages = _uiState.value.messages + userMessage,
-            )
-
         // Save user message to conversation (store sets title from first user input)
         // Refresh currentConversation from store so title appears in history immediately
         _uiState.value.currentConversation?.let { conversation ->
             conversationStore.addMessage(userMessage, conversation)
             conversationStore.loadConversation(conversation.id)?.let { updated ->
-                _uiState.value = _uiState.value.copy(currentConversation = updated)
+                _uiState.value = _uiState.value.copy(
+                    currentConversation = updated,
+                    messages = updated.messages + userMessage,
+                )
             }
         }
 
@@ -540,9 +538,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                         content = content,
                         thinkingContent = thinkingContent,
                     )
-                } else {
-                    message
-                }
+                } else message
             }
 
         _uiState.value = _uiState.value.copy(messages = updatedMessages)
@@ -848,7 +844,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun loadConversation(conversation: Conversation) {
         val loaded = conversationStore.loadConversation(conversation.id) ?: conversation
-        conversationStore.ensureConversationInList(loaded)
         _uiState.value = _uiState.value.copy(currentConversation = loaded)
 
         if (loaded.messages.isEmpty()) {
