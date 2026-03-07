@@ -401,3 +401,7 @@ __pycache__/
 debug_*.py
 .cache/
 *.egg-info/
+
+# Auto-added by Marisol pipeline
+MARISOL.md
+.pio/
