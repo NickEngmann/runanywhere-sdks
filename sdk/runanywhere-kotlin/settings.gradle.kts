@@ -50,3 +50,7 @@ include(":modules:runanywhere-core-onnx")
 // Single file: RAGModule.kt which calls rac_backend_rag_register()
 // Matches iOS: Sources/RAGRuntime/RAG.swift
 include(":modules:runanywhere-core-rag")
+
+// Pairing module - secure device pairing with QR code and ECDH
+// Matches iOS: Sources/Pairing/Pairing.swift
+include(":modules:runanywhere-pairing")
