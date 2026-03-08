@@ -1,0 +1,78 @@
+name: Watch App Release
+
+on:
+  push:
+    tags:
+      - 'watch-v*'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - debug
+          - release
+
+defaults:
+  run:
+    working-directory: examples/android/RunAnywhereWatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+      
+      - name: Create local.properties
+        run: echo "sdk.dir=$ANDROID_HOME" > local.properties
+      
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+      
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+      
+      - name: Run JVM tests
+        run: ./gradlew :tests-jvm:test
+      
+      - name: Build APK
+        run: |
+          BUILD_TYPE="${{ github.event.inputs.build_type || 'release' }}"
+          if [ "$BUILD_TYPE" = "debug" ]; then
+            ./gradlew assembleDebug
+          else
+            ./gradlew assembleRelease
+          fi
+      
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: watch-apk-${{ github.event.inputs.build_type || 'release' }}
+          path: examples/android/RunAnywhereWatch/app/build/outputs/apk/**/*.apk
+          retention-days: 30
+      
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/watch-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: examples/android/RunAnywhereWatch/app/build/outputs/apk/**/*.apk
+          generate_release_notes: true
+          draft: true
