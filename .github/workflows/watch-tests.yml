@@ -54,6 +54,10 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install Android SDK platforms
+        run: |
+          sdkmanager "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0" 2>&1 | tail -5
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
