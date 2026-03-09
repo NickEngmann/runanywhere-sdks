@@ -1,0 +1,49 @@
+name: Screenshot Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  screenshots:
+    name: Generate Screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK platforms
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" 2>&1 | tail -5
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-screenshots-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Record Paparazzi screenshots
+        working-directory: examples/android/RunAnywhereWatch
+        run: ./gradlew :app:recordPaparazziDebug --no-daemon --stacktrace
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-screenshots
+          path: |
+            examples/android/RunAnywhereWatch/app/src/test/snapshots/
+          retention-days: 90
