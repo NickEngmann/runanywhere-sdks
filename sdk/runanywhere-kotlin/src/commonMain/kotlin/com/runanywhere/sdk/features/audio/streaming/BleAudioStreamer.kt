@@ -65,13 +65,13 @@ abstract class BleAudioStreamer(
             crc = crc xor (byte.toInt() and 0xFF)
             for (bit in 0..7) {
                 if ((crc and 1) != 0) {
-                    crc = (crc ushr 1) xor 0xEDB88320
+                    crc = (crc ushr 1) xor 0xEDB88320.toInt()
                 } else {
                     crc = crc ushr 1
                 }
             }
         }
-        return crc xor 0xFFFFFFFF
+        return crc xor 0xFFFFFFFF.toInt()
     }
     
     /**
