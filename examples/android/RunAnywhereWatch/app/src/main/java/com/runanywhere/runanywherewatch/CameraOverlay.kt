@@ -84,22 +84,22 @@ fun CameraOverlay(
                 }
             }
 
-            // Close button — top right
+            // Close button — top, within bezel safe area
             IconButton(
                 onClick = onCloseCamera,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
+                    .align(if (cfg.isWatch) Alignment.TopCenter else Alignment.TopEnd)
                     .padding(
-                        top = if (cfg.isWatch) 20.dp else 16.dp,
-                        end = if (cfg.isWatch) 20.dp else 16.dp
+                        top = if (cfg.isWatch) 16.dp else 16.dp,
+                        end = if (cfg.isWatch) 0.dp else 16.dp
                     )
-                    .size(if (cfg.isWatch) 28.dp else 40.dp)
+                    .size(if (cfg.isWatch) 24.dp else 40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF1A1A1A))
+                    .background(Color(0xFF333333))
             ) {
                 Text(
-                    text = "X",
-                    fontSize = if (cfg.isWatch) 14.sp else 20.sp,
+                    text = "\u2715",
+                    fontSize = if (cfg.isWatch) 11.sp else 18.sp,
                     color = Color.White
                 )
             }
@@ -136,15 +136,15 @@ fun CameraOverlay(
                     }
                 }
 
-                // Capture button — bottom center
+                // Capture button — bottom center, well inside bezel
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = if (cfg.isWatch) 16.dp else 32.dp),
-                    horizontalArrangement = Arrangement.Center,
+                        .padding(bottom = if (cfg.isWatch) 24.dp else 32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(if (cfg.isWatch) 10.dp else 0.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // On watch: Quick Ask is a small button beside capture
+                    // On watch: Quick Ask beside capture
                     if (cfg.isWatch) {
                         Button(
                             onClick = {
@@ -158,9 +158,8 @@ fun CameraOverlay(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
                             contentPadding = PaddingValues(0.dp)
                         ) {
-                            Text(text = "?", fontSize = 12.sp)
+                            Text(text = "?", fontSize = 10.sp)
                         }
-                        Spacer(modifier = Modifier.width(8.dp))
                     }
 
                     IconButton(
@@ -235,7 +234,7 @@ fun CameraOverlay(
                         },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
-                            .padding(bottom = if (cfg.isWatch) 16.dp else 32.dp)
+                            .padding(bottom = if (cfg.isWatch) 24.dp else 32.dp)
                             .size(cfg.captureButtonSize)
                             .clip(CircleShape)
                             .background(Color(0xFF00E5FF))
