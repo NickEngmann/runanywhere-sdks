@@ -1,8 +1,10 @@
 package com.runanywhere.runanywherewatch
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,11 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,79 +42,44 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun handleMicClick() {
-        // Initialize camera manager if needed
         val cameraManager = CameraManager()
         if (cameraManager.initializeCamera()) {
-            // Start voice input flow
-            // In real app: start STT, capture audio, send to LLM
             showQueryInput("Ask about this...")
         }
     }
     
     private fun handleCameraClick() {
-        // Initialize camera overlay
         val cameraManager = CameraManager()
         if (cameraManager.initializeCamera()) {
-            // Show camera overlay
             showCameraOverlay(cameraManager)
         }
     }
     
     private fun handleVisionQuery(query: String) {
-        // Send query to multimodal VLM
-        // In real app: call RunAnywhereSDK with vision query
         showResponse("Processing: $query")
     }
     
     private fun handlePhotoCaptured(photoFile: java.io.File) {
-        // Photo captured, ready for vision query
         showResponse("Photo captured: ${photoFile.name}")
     }
     
-    private fun showQueryInput(prompt: String) {
-        // Show query input UI
-        // In real app: display input field or start STT
-    }
-    
-    private fun showCameraOverlay(cameraManager: CameraManager) {
-        // Show camera overlay UI
-        // In real app: would use CameraX for preview
-    }
-    
-    private fun showResponse(message: String) {
-        // Show response UI
-        // In real app: display LLM response
-    }
+    private fun showQueryInput(prompt: String) { }
+    private fun showCameraOverlay(cameraManager: CameraManager) { }
+    private fun showResponse(message: String) { }
 }
 
 @Composable
 fun WatchFaceScreen(
-    onMicClick: (Context) -> Unit,
-    onCameraClick: (Context) -> Unit,
-    onVisionQuery: (String) -> Unit,
-    onPhotoCaptured: (java.io.File) -> Unit
+    onMicClick: () -> Unit = {},
+    onCameraClick: () -> Unit = {},
+    onVisionQuery: (String) -> Unit = {},
+    onPhotoCaptured: (java.io.File) -> Unit = {}
 ) {
-    val context = LocalContext.current
     var sdkStatus by remember { mutableStateOf(SDKStatus.NOT_LOADED) }
     var batteryLevel by remember { mutableStateOf(100) }
     var showCameraOverlay by remember { mutableStateOf(false) }
     var cameraManager by remember { mutableStateOf<CameraManager?>(null) }
     var visionResponse by remember { mutableStateOf<String?>(null) }
-    
-    // Initialize SDK
-    LaunchedEffect(Unit) {
-        try {
-            RunAnywhereSDK.initialize(context)
-            sdkStatus = SDKStatus.READY
-        } catch (e: Exception) {
-            sdkStatus = SDKStatus.NOT_LOADED
-        }
-    }
-    
-    // Simulate battery level (in real app, use BatteryManager)
-    LaunchedEffect(Unit) {
-        // Update battery periodically
-    }
     
     Box(
         modifier = Modifier
@@ -134,18 +100,15 @@ fun WatchFaceScreen(
                 IconButton(
                     onClick = { 
                         showCameraOverlay = true
-                        cameraManager = CameraManager(context)
-                        onCameraClick(context)
+                        cameraManager = CameraManager()
+                        onCameraClick()
                     },
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF1A1A1A))
                 ) {
-                    Text(
-                        "📷",
-                        fontSize = 24.sp
-                    )
+                    Text("camera", fontSize = 14.sp)
                 }
             }
             
@@ -226,8 +189,8 @@ fun WatchFaceScreen(
             ) {
                 IconButton(
                     onClick = { 
-                        cameraManager = CameraManager(context)
-                        onMicClick(context)
+                        cameraManager = CameraManager()
+                        onMicClick()
                     },
                     modifier = Modifier
                         .size(64.dp)
@@ -235,10 +198,7 @@ fun WatchFaceScreen(
                         .background(Color(0xFF1A1A1A))
                         .border(2.dp, Color(0xFF00E5FF), CircleShape)
                 ) {
-                    Text(
-                        "🎤",
-                        fontSize = 32.sp
-                    )
+                    Text("mic", fontSize = 14.sp)
                 }
             }
         }

@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.runanywhere.runanywherewatch"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.runanywhere.runanywherewatch"
