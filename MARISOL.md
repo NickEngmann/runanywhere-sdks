@@ -57,15 +57,17 @@ All screens use `ScreenConfig.kt` with `AdaptiveLayout` composable — auto-dete
 
 | Property | Watch | Phone |
 |----------|-------|-------|
-| Time font | 34sp | 64sp |
+| Time font | 36sp | 64sp |
 | Body font | 11sp | 14sp |
-| Primary button | 36dp | 64dp |
+| Primary button | 28dp | 64dp |
+| Secondary button | 22dp | 48dp |
 | Edge padding | 8dp | 16dp |
-| Camera preview | 120dp | 280dp |
-| Camera button | Top bar | Bottom bar (beside mic) |
+| Camera preview | 100dp | 280dp |
+| Capture button | 36dp | 72dp |
+| Status dot | 6dp | 14dp |
 | Transcription lines | 2 max | 4 max |
 
-Watch screens use 20dp horizontal padding for round safe area. Camera's Quick Ask button is inline with capture on watch.
+Watch screens use 24dp horizontal padding for round safe area. Camera's Quick Ask button is inline with capture on watch. Close/back buttons use dark circle backgrounds (`#1A1A1A`) with unicode glyphs for visibility on dark watch faces.
 
 ## Screenshot Testing
 
@@ -80,11 +82,11 @@ cd examples/android/RunAnywhereWatch
 ### Watch Screenshots (WEAR_OS_SMALL_ROUND)
 | Screenshot | Description |
 |-----------|-------------|
-| `watchFace_watch_default` | Time (34sp), date, seconds, MIC + C buttons, AI status dot |
+| `watchFace_watch_default` | Time (36sp) centered, date, seconds, C (22dp) + M (28dp) buttons at bottom, AI dot top-center |
 | `transcription_watch_empty` | Empty state — "Tap the mic to start" |
 | `transcription_watch_withEntries` | Cards with timestamps, source badges within round safe area |
 | `transcription_watch_lowConfidence` | 65% confidence indicator on voice transcription |
-| `camera_watch_viewfinder` | 120dp preview, ? + capture buttons at bottom, X close |
+| `camera_watch_viewfinder` | 100dp preview, ? + capture buttons at bottom (24dp padding), ✕ close top-center |
 
 ### Phone Screenshots (PIXEL_5)
 | Screenshot | Description |
@@ -97,6 +99,17 @@ cd examples/android/RunAnywhereWatch
 Golden files: `app/src/test/snapshots/images/`
 
 **Note**: Paparazzi uses x86_64 `layoutlib` — runs in CI (ubuntu-latest) but NOT on ARM64 (Jetson)
+
+### Screenshot Verification (CRITICAL)
+
+**Always verify screenshots after UI changes.** Download CI screenshot artifacts and visually inspect:
+
+1. **Watch (round face)**: All content must fit within the ~192dp circular viewport. Nothing should clip against the bezel edges — use 20-24dp padding from edges. Buttons at top/bottom must be at least 16-20dp from the edge
+2. **Phone**: Full layout visible, proper spacing, no overlapping elements
+3. **Check for**: Text readability (watch fonts ≥ 8sp), button tap targets (≥ 22dp on watch), centered alignment, bezel-safe positioning of close/back buttons
+4. **Common issues**: Oversized elements overflowing watch face, close buttons clipping at top bezel, text too small to read, buttons too large dominating the screen
+
+If screenshots show usability problems, fix the `ScreenConfig.kt` values and re-run `recordPaparazziDebug` until everything fits well and is usable on both form factors.
 
 ## CI/CD
 
@@ -142,6 +155,7 @@ Fully implemented via llama.cpp C++ backend:
 | 2026-03-09 | PRs #26 + #27 merged | Both PRs merged to main, all CI green |
 | 2026-03-09 | PR #28 (screenshots) | Paparazzi screenshot tests — 8 real UI renders of all watch screens |
 | 2026-03-09 | PR #29 (responsive UI) | Adaptive watch/phone layouts, ScreenConfig.kt, 9 screenshots (5 watch + 4 phone) |
+| 2026-03-09 | PR #30 (UI polish) | Watch centering, smaller buttons, bezel-safe back/close, dark bg icon buttons |
 
 ## Notes
 
