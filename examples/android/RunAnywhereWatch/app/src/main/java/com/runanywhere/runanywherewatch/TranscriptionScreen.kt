@@ -52,63 +52,70 @@ fun TranscriptionScreen(
 
     AdaptiveLayout {
         val cfg = LocalScreenConfig.current
-        // Extra horizontal padding on watch for round screen safe area
-        val hPad = if (cfg.isWatch) 20.dp else 12.dp
+        // Round safe area: content must avoid bezel clipping
+        val hPad = if (cfg.isWatch) 24.dp else 12.dp
 
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF0D0D0D))
+                .padding(top = if (cfg.isWatch) 10.dp else 0.dp)
         ) {
-            // Header
-            Row(
+            // Header — back button visible with background, title centered
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = hPad,
-                        vertical = if (cfg.isWatch) 12.dp else 8.dp
-                    ),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = hPad, vertical = if (cfg.isWatch) 6.dp else 8.dp)
             ) {
+                // Back button — with visible background on watch
                 IconButton(
                     onClick = onBack,
-                    modifier = Modifier.size(if (cfg.isWatch) 24.dp else 32.dp)
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .size(if (cfg.isWatch) 22.dp else 32.dp)
+                        .then(
+                            if (cfg.isWatch) Modifier
+                                .clip(CircleShape)
+                                .background(Color(0xFF1A1A1A))
+                            else Modifier
+                        )
                 ) {
                     Text(
-                        "<",
+                        "\u2190",
                         color = Color(0xFF00E5FF),
-                        fontSize = if (cfg.isWatch) 14.sp else 18.sp
+                        fontSize = if (cfg.isWatch) 12.sp else 18.sp
                     )
                 }
 
+                // Title — always centered in the row
                 Text(
                     text = if (cfg.isWatch) "Transcripts" else "Transcriptions",
                     color = Color.White,
                     fontSize = cfg.headerFontSize,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.SansSerif
+                    fontFamily = FontFamily.SansSerif,
+                    modifier = Modifier.align(Alignment.Center)
                 )
 
+                // Listening indicator
                 if (isListening) {
                     Box(
                         modifier = Modifier
+                            .align(Alignment.CenterEnd)
                             .size(cfg.statusDotSize)
                             .clip(CircleShape)
                             .background(Color(0xFFFF4444))
                     )
-                } else {
-                    Spacer(modifier = Modifier.size(cfg.statusDotSize))
                 }
             }
 
-            // Divider
+            // Divider — inset on watch to avoid bezel
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = hPad)
+                    .padding(horizontal = if (cfg.isWatch) (hPad + 4.dp) else hPad)
                     .height(1.dp)
-                    .background(Color(0xFF00E5FF).copy(alpha = 0.3f))
+                    .background(Color(0xFF00E5FF).copy(alpha = 0.2f))
             )
 
             // Content
@@ -151,23 +158,26 @@ fun TranscriptionScreen(
                 }
             }
 
-            // Footer
+            // Footer — compact on watch to avoid bezel clipping
             if (transcriptions.isNotEmpty()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            horizontal = hPad,
-                            vertical = if (cfg.isWatch) 4.dp else 6.dp
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontal = if (cfg.isWatch) (hPad + 8.dp) else hPad,
+                            vertical = if (cfg.isWatch) 2.dp else 6.dp
+                        )
+                        .padding(bottom = if (cfg.isWatch) 8.dp else 0.dp),
+                    horizontalArrangement = if (cfg.isWatch) Arrangement.Center else Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "${transcriptions.size} entries",
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = cfg.captionFontSize
-                    )
+                    if (!cfg.isWatch) {
+                        Text(
+                            text = "${transcriptions.size} entries",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = cfg.captionFontSize
+                        )
+                    }
 
                     TextButton(
                         onClick = onClearAll,
@@ -177,7 +187,7 @@ fun TranscriptionScreen(
                         )
                     ) {
                         Text(
-                            text = "Clear",
+                            text = if (cfg.isWatch) "Clear all" else "Clear",
                             color = Color(0xFFFF4444).copy(alpha = 0.7f),
                             fontSize = cfg.captionFontSize
                         )

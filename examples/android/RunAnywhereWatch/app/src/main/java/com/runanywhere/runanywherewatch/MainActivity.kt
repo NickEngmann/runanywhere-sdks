@@ -87,41 +87,144 @@ fun WatchFaceScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF0D0D0D))
+                .background(Color(0xFF0D0D0D)),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = cfg.edgePadding),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Top bar: AI status + camera button
+            if (cfg.isWatch) {
+                // ── Watch layout: time dominant, everything else minimal ──
+                // Time group — true center of the face
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = getCurrentTime(),
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = cfg.timeFontSize,
+                        color = Color(0xFF00E5FF)
+                    )
+                    Text(
+                        text = getCurrentDate(),
+                        fontFamily = FontFamily.SansSerif,
+                        fontSize = cfg.dateFontSize,
+                        color = Color.White.copy(alpha = 0.6f),
+                        modifier = Modifier.padding(top = 1.dp)
+                    )
+                    Text(
+                        text = getCurrentSeconds(),
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = cfg.secondsFontSize,
+                        color = Color(0xFF00E5FF).copy(alpha = 0.7f),
+                        modifier = Modifier.padding(top = 1.dp)
+                    )
+                }
+
+                // AI status dot — top center, inside bezel
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 18.dp)
+                        .size(cfg.statusDotSize)
+                        .clip(CircleShape)
+                        .background(
+                            when (sdkStatus) {
+                                SDKStatus.NOT_LOADED -> Color(0xFF666666)
+                                SDKStatus.THINKING -> Color(0xFF00E5FF).copy(alpha = 0.5f)
+                                SDKStatus.READY -> Color(0xFF00FF00)
+                            }
+                        )
+                )
+
+                // Battery — top right, subtle
+                Text(
+                    text = "${batteryLevel}%",
+                    fontSize = 8.sp,
+                    color = Color.White.copy(alpha = 0.35f),
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 30.dp, end = 28.dp)
+                )
+
+                // Bottom action row — mic + camera, compact
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            top = if (cfg.isWatch) 20.dp else cfg.edgePadding,
-                            bottom = cfg.itemSpacing
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // AI Status dot
-                    Box(
+                    // Camera
+                    IconButton(
+                        onClick = {
+                            showCameraOverlay = true
+                            cameraManager = CameraManager()
+                            onCameraClick()
+                        },
                         modifier = Modifier
-                            .size(cfg.statusDotSize)
+                            .size(cfg.secondaryButtonSize)
                             .clip(CircleShape)
-                            .background(
-                                when (sdkStatus) {
-                                    SDKStatus.NOT_LOADED -> Color(0xFF666666)
-                                    SDKStatus.THINKING -> Color(0xFF00E5FF).copy(alpha = 0.5f)
-                                    SDKStatus.READY -> Color(0xFF00FF00)
-                                }
-                            )
-                    )
+                            .background(Color(0xFF1A1A1A))
+                    ) {
+                        Text("C", fontSize = 8.sp, color = Color(0xFF00E5FF))
+                    }
+                    // Mic
+                    IconButton(
+                        onClick = {
+                            cameraManager = CameraManager()
+                            onMicClick()
+                        },
+                        modifier = Modifier
+                            .size(cfg.primaryButtonSize)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1A1A1A))
+                            .border(1.5.dp, Color(0xFF00E5FF), CircleShape)
+                    ) {
+                        Text("M", fontSize = 9.sp, color = Color(0xFF00E5FF))
+                    }
+                }
 
-                    // Camera button — hidden on watch to save space
-                    if (!cfg.isWatch) {
+                // Circular bezel border
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(2.dp)
+                ) {
+                    drawCircle(
+                        color = Color(0xFF00E5FF).copy(alpha = 0.2f),
+                        radius = size.minDimension / 2,
+                        style = Stroke(width = 1.dp.toPx())
+                    )
+                }
+            } else {
+                // ── Phone layout: spacious, full-featured ──
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = cfg.edgePadding),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Top bar: AI status + camera button
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = cfg.edgePadding, bottom = cfg.itemSpacing),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(cfg.statusDotSize)
+                                .clip(CircleShape)
+                                .background(
+                                    when (sdkStatus) {
+                                        SDKStatus.NOT_LOADED -> Color(0xFF666666)
+                                        SDKStatus.THINKING -> Color(0xFF00E5FF).copy(alpha = 0.5f)
+                                        SDKStatus.READY -> Color(0xFF00FF00)
+                                    }
+                                )
+                        )
                         IconButton(
                             onClick = {
                                 showCameraOverlay = true
@@ -135,84 +238,53 @@ fun WatchFaceScreen(
                         ) {
                             Text("CAM", fontSize = cfg.captionFontSize, color = Color.White)
                         }
-                    } else {
-                        Spacer(modifier = Modifier.size(cfg.statusDotSize))
-                    }
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Time Display — centered
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = getCurrentTime(),
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = cfg.timeFontSize,
-                        color = Color(0xFF00E5FF)
-                    )
-
-                    Text(
-                        text = getCurrentDate(),
-                        fontFamily = FontFamily.SansSerif,
-                        fontSize = cfg.dateFontSize,
-                        color = Color.White.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(top = if (cfg.isWatch) 2.dp else 8.dp)
-                    )
-
-                    Text(
-                        text = getCurrentSeconds(),
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = cfg.secondsFontSize,
-                        color = Color(0xFF00E5FF).copy(alpha = 0.8f),
-                        modifier = Modifier.padding(top = 2.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Battery
-                Text(
-                    text = if (cfg.isWatch) "${batteryLevel}%" else "Battery: ${batteryLevel}%",
-                    fontSize = cfg.captionFontSize,
-                    color = Color.White.copy(alpha = 0.5f),
-                    modifier = Modifier.padding(bottom = cfg.itemSpacing)
-                )
-
-                // Bottom bar: mic button (+ camera on watch)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = if (cfg.isWatch) 16.dp else cfg.edgePadding),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Camera button on watch — small, beside mic
-                    if (cfg.isWatch) {
-                        IconButton(
-                            onClick = {
-                                showCameraOverlay = true
-                                cameraManager = CameraManager()
-                                onCameraClick()
-                            },
-                            modifier = Modifier
-                                .size(cfg.secondaryButtonSize)
-                                .clip(CircleShape)
-                                .background(Color(0xFF1A1A1A))
-                        ) {
-                            Text("C", fontSize = cfg.captionFontSize, color = Color(0xFF00E5FF))
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
                     }
 
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Time
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = getCurrentTime(),
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = cfg.timeFontSize,
+                            color = Color(0xFF00E5FF)
+                        )
+                        Text(
+                            text = getCurrentDate(),
+                            fontFamily = FontFamily.SansSerif,
+                            fontSize = cfg.dateFontSize,
+                            color = Color.White.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        Text(
+                            text = getCurrentSeconds(),
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = cfg.secondsFontSize,
+                            color = Color(0xFF00E5FF).copy(alpha = 0.8f),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Battery
+                    Text(
+                        text = "Battery: ${batteryLevel}%",
+                        fontSize = cfg.captionFontSize,
+                        color = Color.White.copy(alpha = 0.5f),
+                        modifier = Modifier.padding(bottom = cfg.itemSpacing)
+                    )
+
+                    // Mic button
                     IconButton(
                         onClick = {
                             cameraManager = CameraManager()
                             onMicClick()
                         },
                         modifier = Modifier
+                            .padding(bottom = cfg.edgePadding)
                             .size(cfg.primaryButtonSize)
                             .clip(CircleShape)
                             .background(Color(0xFF1A1A1A))
@@ -220,26 +292,6 @@ fun WatchFaceScreen(
                     ) {
                         Text("MIC", fontSize = cfg.captionFontSize, color = Color(0xFF00E5FF))
                     }
-
-                    if (cfg.isWatch) {
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Spacer(modifier = Modifier.size(cfg.secondaryButtonSize))
-                    }
-                }
-            }
-
-            // Circular border for round watch screen
-            if (cfg.isWatch) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(2.dp)
-                ) {
-                    drawCircle(
-                        color = Color(0xFF00E5FF).copy(alpha = 0.3f),
-                        radius = size.minDimension / 2,
-                        style = Stroke(width = 1.dp.toPx())
-                    )
                 }
             }
 
