@@ -44,126 +44,144 @@ fun TranscriptionScreen(
 ) {
     val listState = rememberLazyListState()
 
-    // Auto-scroll to bottom on new transcriptions
     LaunchedEffect(transcriptions.size) {
         if (transcriptions.isNotEmpty()) {
             listState.animateScrollToItem(transcriptions.size - 1)
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
-    ) {
-        // Header
-        Row(
+    AdaptiveLayout {
+        val cfg = LocalScreenConfig.current
+        // Extra horizontal padding on watch for round screen safe area
+        val hPad = if (cfg.isWatch) 20.dp else 12.dp
+
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .background(Color(0xFF0D0D0D))
         ) {
-            IconButton(
-                onClick = onBack,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Text("<", color = Color(0xFF00E5FF), fontSize = 18.sp)
-            }
-
-            Text(
-                text = "Transcriptions",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.SansSerif
-            )
-
-            // Listening indicator
-            if (isListening) {
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFF4444))
-                )
-            } else {
-                Spacer(modifier = Modifier.size(12.dp))
-            }
-        }
-
-        // Divider
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color(0xFF00E5FF).copy(alpha = 0.3f))
-        )
-
-        // Transcription list
-        if (transcriptions.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "No transcriptions yet",
-                        color = Color.White.copy(alpha = 0.5f),
-                        fontSize = 14.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Tap the mic to start",
-                        color = Color(0xFF00E5FF).copy(alpha = 0.5f),
-                        fontSize = 12.sp
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                contentPadding = PaddingValues(vertical = 8.dp)
-            ) {
-                items(transcriptions) { item ->
-                    TranscriptionCard(item)
-                }
-            }
-        }
-
-        // Footer with count and clear
-        if (transcriptions.isNotEmpty()) {
+            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(
+                        horizontal = hPad,
+                        vertical = if (cfg.isWatch) 12.dp else 8.dp
+                    ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${transcriptions.size} entries",
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 11.sp
-                )
-
-                TextButton(
-                    onClick = onClearAll,
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(if (cfg.isWatch) 24.dp else 32.dp)
                 ) {
                     Text(
-                        text = "Clear",
-                        color = Color(0xFFFF4444).copy(alpha = 0.7f),
-                        fontSize = 11.sp
+                        "<",
+                        color = Color(0xFF00E5FF),
+                        fontSize = if (cfg.isWatch) 14.sp else 18.sp
                     )
+                }
+
+                Text(
+                    text = if (cfg.isWatch) "Transcripts" else "Transcriptions",
+                    color = Color.White,
+                    fontSize = cfg.headerFontSize,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.SansSerif
+                )
+
+                if (isListening) {
+                    Box(
+                        modifier = Modifier
+                            .size(cfg.statusDotSize)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFF4444))
+                    )
+                } else {
+                    Spacer(modifier = Modifier.size(cfg.statusDotSize))
+                }
+            }
+
+            // Divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = hPad)
+                    .height(1.dp)
+                    .background(Color(0xFF00E5FF).copy(alpha = 0.3f))
+            )
+
+            // Content
+            if (transcriptions.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "No transcriptions yet",
+                            color = Color.White.copy(alpha = 0.5f),
+                            fontSize = cfg.bodyFontSize
+                        )
+                        Spacer(modifier = Modifier.height(cfg.itemSpacing))
+                        Text(
+                            text = "Tap the mic to start",
+                            color = Color(0xFF00E5FF).copy(alpha = 0.5f),
+                            fontSize = cfg.captionFontSize
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(horizontal = hPad),
+                    verticalArrangement = Arrangement.spacedBy(cfg.itemSpacing),
+                    contentPadding = PaddingValues(vertical = cfg.itemSpacing)
+                ) {
+                    items(transcriptions) { item ->
+                        TranscriptionCard(item, cfg)
+                    }
+                }
+            }
+
+            // Footer
+            if (transcriptions.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = hPad,
+                            vertical = if (cfg.isWatch) 4.dp else 6.dp
+                        ),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${transcriptions.size} entries",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = cfg.captionFontSize
+                    )
+
+                    TextButton(
+                        onClick = onClearAll,
+                        contentPadding = PaddingValues(
+                            horizontal = if (cfg.isWatch) 4.dp else 8.dp,
+                            vertical = 2.dp
+                        )
+                    ) {
+                        Text(
+                            text = "Clear",
+                            color = Color(0xFFFF4444).copy(alpha = 0.7f),
+                            fontSize = cfg.captionFontSize
+                        )
+                    }
                 }
             }
         }
@@ -171,18 +189,17 @@ fun TranscriptionScreen(
 }
 
 @Composable
-private fun TranscriptionCard(item: TranscriptionItem) {
+private fun TranscriptionCard(item: TranscriptionItem, cfg: ScreenConfig) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = RoundedCornerShape(if (cfg.isWatch) 6.dp else 8.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF1A1A1A)
         )
     ) {
         Column(
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.padding(if (cfg.isWatch) 6.dp else 10.dp)
         ) {
-            // Timestamp and source row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -191,48 +208,45 @@ private fun TranscriptionCard(item: TranscriptionItem) {
                 Text(
                     text = formatTimestamp(item.timestamp),
                     color = Color(0xFF00E5FF).copy(alpha = 0.7f),
-                    fontSize = 10.sp,
+                    fontSize = if (cfg.isWatch) 8.sp else 10.sp,
                     fontFamily = FontFamily.Monospace
                 )
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    // Source badge
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(3.dp))
                             .background(sourceColor(item.source).copy(alpha = 0.2f))
-                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                            .padding(horizontal = 3.dp, vertical = 1.dp)
                     ) {
                         Text(
                             text = item.source,
                             color = sourceColor(item.source),
-                            fontSize = 9.sp
+                            fontSize = if (cfg.isWatch) 7.sp else 9.sp
                         )
                     }
 
-                    // Confidence indicator
                     if (item.confidence < 0.8f) {
                         Text(
                             text = "${(item.confidence * 100).toInt()}%",
                             color = Color(0xFFFFAA00),
-                            fontSize = 9.sp
+                            fontSize = if (cfg.isWatch) 7.sp else 9.sp
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(if (cfg.isWatch) 2.dp else 4.dp))
 
-            // Transcription text
             Text(
                 text = item.text,
                 color = Color.White,
-                fontSize = 13.sp,
+                fontSize = if (cfg.isWatch) 10.sp else 13.sp,
                 fontFamily = FontFamily.SansSerif,
-                maxLines = 4,
+                maxLines = if (cfg.isWatch) 2 else 4,
                 overflow = TextOverflow.Ellipsis
             )
         }

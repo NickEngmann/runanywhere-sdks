@@ -5,13 +5,6 @@ import app.cash.paparazzi.Paparazzi
 import org.junit.Rule
 import org.junit.Test
 
-/**
- * Screenshot tests for WatchFaceScreen using Paparazzi.
- * Renders actual Compose UI to PNG — no emulator or device needed.
- *
- * Run: ./gradlew :app:recordPaparazziDebug
- * Verify: ./gradlew :app:verifyPaparazziDebug
- */
 class WatchFaceScreenshots {
 
     @get:Rule
@@ -21,33 +14,28 @@ class WatchFaceScreenshots {
     )
 
     @Test
-    fun watchFace_defaultState() {
+    fun watchFace_watch_default() {
         paparazzi.snapshot {
             WatchFaceTheme {
                 WatchFaceScreen()
             }
         }
     }
+}
+
+class WatchFacePhoneScreenshots {
+
+    @get:Rule
+    val paparazzi = Paparazzi(
+        deviceConfig = DeviceConfig.PIXEL_5,
+        theme = "android:Theme.Material.NoActionBar"
+    )
 
     @Test
-    fun watchFace_sdkReady() {
+    fun watchFace_phone_default() {
         paparazzi.snapshot {
             WatchFaceTheme {
                 WatchFaceScreen()
-            }
-        }
-    }
-
-    @Test
-    fun watchFace_phoneLayout() {
-        paparazzi.snapshot {
-            WatchFaceTheme {
-                WatchFaceScreen(
-                    onMicClick = {},
-                    onCameraClick = {},
-                    onVisionQuery = {},
-                    onPhotoCaptured = {}
-                )
             }
         }
     }

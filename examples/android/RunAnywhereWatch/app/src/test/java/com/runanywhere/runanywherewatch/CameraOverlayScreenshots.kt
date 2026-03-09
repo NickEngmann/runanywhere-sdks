@@ -5,11 +5,7 @@ import app.cash.paparazzi.Paparazzi
 import org.junit.Rule
 import org.junit.Test
 
-/**
- * Screenshot tests for CameraOverlay using Paparazzi.
- * Renders actual Compose UI to PNG — no emulator or device needed.
- */
-class CameraOverlayScreenshots {
+class CameraWatchScreenshots {
 
     @get:Rule
     val paparazzi = Paparazzi(
@@ -18,7 +14,7 @@ class CameraOverlayScreenshots {
     )
 
     @Test
-    fun cameraOverlay_viewfinder() {
+    fun camera_watch_viewfinder() {
         paparazzi.snapshot {
             WatchFaceTheme {
                 CameraOverlay(
@@ -30,16 +26,25 @@ class CameraOverlayScreenshots {
             }
         }
     }
+}
+
+class CameraPhoneScreenshots {
+
+    @get:Rule
+    val paparazzi = Paparazzi(
+        deviceConfig = DeviceConfig.PIXEL_5,
+        theme = "android:Theme.Material.NoActionBar"
+    )
 
     @Test
-    fun cameraOverlay_hidden() {
+    fun camera_phone_viewfinder() {
         paparazzi.snapshot {
             WatchFaceTheme {
                 CameraOverlay(
                     onCapturePhoto = {},
                     onAskAboutPhoto = {},
                     onCloseCamera = {},
-                    isShowing = false
+                    isShowing = true
                 )
             }
         }
