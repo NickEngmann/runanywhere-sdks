@@ -30,11 +30,11 @@ fun CameraOverlay(
     isShowing: Boolean
 ) {
     if (!isShowing) return
-    
+
     var flashOpacity by remember { mutableStateOf(0f) }
     var capturedPhoto by remember { mutableStateOf<File?>(null) }
     var showPhoto by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(showPhoto) {
         if (showPhoto) {
             flashOpacity = 1f
@@ -42,169 +42,214 @@ fun CameraOverlay(
             flashOpacity = 0f
         }
     }
-    
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        // Camera preview placeholder
+
+    AdaptiveLayout {
+        val cfg = LocalScreenConfig.current
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .background(Color.Black)
         ) {
+            // Camera preview
             Box(
-                modifier = Modifier
-                    .size(200.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFF1A1A1A))
-                    .border(2.dp, Color(0xFF00E5FF), CircleShape),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "Camera", fontSize = 16.sp, color = Color.White)
-            }
-            
-            if (flashOpacity > 0f) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.White.copy(alpha = flashOpacity))
-                )
+                        .size(cfg.cameraPreviewSize)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1A1A1A))
+                        .border(
+                            if (cfg.isWatch) 1.dp else 2.dp,
+                            Color(0xFF00E5FF),
+                            CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Camera",
+                        fontSize = cfg.bodyFontSize,
+                        color = Color.White
+                    )
+                }
+
+                if (flashOpacity > 0f) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.White.copy(alpha = flashOpacity))
+                    )
+                }
             }
-        }
-        
-        // Close button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.End
-        ) {
+
+            // Close button — top right
             IconButton(
                 onClick = onCloseCamera,
                 modifier = Modifier
-                    .size(48.dp)
+                    .align(Alignment.TopEnd)
+                    .padding(
+                        top = if (cfg.isWatch) 20.dp else 16.dp,
+                        end = if (cfg.isWatch) 20.dp else 16.dp
+                    )
+                    .size(if (cfg.isWatch) 28.dp else 40.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF1A1A1A))
             ) {
-                Text(text = "X", fontSize = 24.sp, color = Color.White)
-            }
-        }
-        
-        // Quick Ask button
-        if (!showPhoto) {
-            Column(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
                 Text(
-                    text = "Quick Ask",
-                    fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.7f)
+                    text = "X",
+                    fontSize = if (cfg.isWatch) 14.sp else 20.sp,
+                    color = Color.White
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Button(
-                    onClick = {
-                        val photoFile = File("/tmp/quick_ask_${System.currentTimeMillis()}.jpg")
-                        capturedPhoto = photoFile
-                        showPhoto = true
-                        onCapturePhoto(photoFile)
-                        onAskAboutPhoto(photoFile)
-                    },
-                    modifier = Modifier.size(64.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
-                ) {
-                    Text(text = "?", fontSize = 24.sp)
-                }
             }
-        }
-        
-        // Capture button
-        if (!showPhoto) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(32.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                IconButton(
-                    onClick = {
-                        val photoFile = File("/tmp/photo_${System.currentTimeMillis()}.jpg")
-                        capturedPhoto = photoFile
-                        showPhoto = true
-                        onCapturePhoto(photoFile)
-                    },
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
-                        .border(4.dp, Color(0xFF00E5FF), CircleShape)
-                ) {
-                    Text(text = "", fontSize = 1.sp)
-                }
-            }
-        }
-        
-        // Photo display with mic button overlay
-        if (showPhoto && capturedPhoto != null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.8f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
+
+            // Viewfinder controls
+            if (!showPhoto) {
+                // Quick Ask — bottom left (or hidden on small watches)
+                if (!cfg.isWatch) {
+                    Column(
                         modifier = Modifier
-                            .size(200.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF1A1A1A))
-                            .border(2.dp, Color(0xFF00E5FF), CircleShape),
-                        contentAlignment = Alignment.Center
+                            .align(Alignment.CenterStart)
+                            .padding(start = cfg.edgePadding),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "Photo", fontSize = 16.sp, color = Color.White)
+                        Text(
+                            text = "Quick Ask",
+                            fontSize = cfg.captionFontSize,
+                            color = Color.White.copy(alpha = 0.7f)
+                        )
+                        Spacer(modifier = Modifier.height(cfg.itemSpacing))
+                        Button(
+                            onClick = {
+                                val photoFile = File("/tmp/quick_ask_${System.currentTimeMillis()}.jpg")
+                                capturedPhoto = photoFile
+                                showPhoto = true
+                                onCapturePhoto(photoFile)
+                                onAskAboutPhoto(photoFile)
+                            },
+                            modifier = Modifier.size(cfg.secondaryButtonSize),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
+                        ) {
+                            Text(text = "?", fontSize = cfg.headerFontSize)
+                        }
                     }
                 }
-                
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 100.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Ask about this photo",
-                        fontSize = 16.sp,
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontFamily = FontFamily.SansSerif
-                    )
-                }
-                
+
+                // Capture button — bottom center
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(32.dp),
-                    horizontalArrangement = Arrangement.Center
+                        .padding(bottom = if (cfg.isWatch) 16.dp else 32.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // On watch: Quick Ask is a small button beside capture
+                    if (cfg.isWatch) {
+                        Button(
+                            onClick = {
+                                val photoFile = File("/tmp/quick_ask_${System.currentTimeMillis()}.jpg")
+                                capturedPhoto = photoFile
+                                showPhoto = true
+                                onCapturePhoto(photoFile)
+                                onAskAboutPhoto(photoFile)
+                            },
+                            modifier = Modifier.size(cfg.secondaryButtonSize),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text(text = "?", fontSize = 12.sp)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+                    IconButton(
+                        onClick = {
+                            val photoFile = File("/tmp/photo_${System.currentTimeMillis()}.jpg")
+                            capturedPhoto = photoFile
+                            showPhoto = true
+                            onCapturePhoto(photoFile)
+                        },
+                        modifier = Modifier
+                            .size(cfg.captureButtonSize)
+                            .clip(CircleShape)
+                            .background(Color.White)
+                            .border(
+                                if (cfg.isWatch) 2.dp else 4.dp,
+                                Color(0xFF00E5FF),
+                                CircleShape
+                            )
+                    ) {
+                        Text(text = "", fontSize = 1.sp)
+                    }
+                }
+            }
+
+            // Photo review overlay
+            if (showPhoto && capturedPhoto != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.85f))
+                ) {
+                    // Photo preview
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(if (cfg.isWatch) 80.dp else 180.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF1A1A1A))
+                                .border(
+                                    if (cfg.isWatch) 1.dp else 2.dp,
+                                    Color(0xFF00E5FF),
+                                    CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Photo",
+                                fontSize = cfg.bodyFontSize,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    // Label
+                    Text(
+                        text = "Ask about this photo",
+                        fontSize = cfg.bodyFontSize,
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontFamily = FontFamily.SansSerif,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = if (cfg.isWatch) 24.dp else 80.dp)
+                    )
+
+                    // Mic button
                     IconButton(
                         onClick = {
                             capturedPhoto?.let { onAskAboutPhoto(it) }
                         },
                         modifier = Modifier
-                            .size(80.dp)
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = if (cfg.isWatch) 16.dp else 32.dp)
+                            .size(cfg.captureButtonSize)
                             .clip(CircleShape)
                             .background(Color(0xFF00E5FF))
-                            .border(4.dp, Color.White, CircleShape)
+                            .border(
+                                if (cfg.isWatch) 2.dp else 4.dp,
+                                Color.White,
+                                CircleShape
+                            )
                     ) {
-                        Text(text = "Mic", fontSize = 14.sp, color = Color.White)
+                        Text(
+                            text = "MIC",
+                            fontSize = cfg.captionFontSize,
+                            color = Color.White
+                        )
                     }
                 }
             }

@@ -80,192 +80,222 @@ fun WatchFaceScreen(
     var showCameraOverlay by remember { mutableStateOf(false) }
     var cameraManager by remember { mutableStateOf<CameraManager?>(null) }
     var visionResponse by remember { mutableStateOf<String?>(null) }
-    
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFF0D0D0D))
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Top bar with camera button
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                IconButton(
-                    onClick = { 
-                        showCameraOverlay = true
-                        cameraManager = CameraManager()
-                        onCameraClick()
-                    },
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF1A1A1A))
-                ) {
-                    Text("camera", fontSize = 14.sp)
-                }
-            }
-            
-            // AI Status Indicator
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clip(CircleShape)
-                        .background(
-                            when (sdkStatus) {
-                                SDKStatus.NOT_LOADED -> Color(0xFF666666)
-                                SDKStatus.THINKING -> Color(0xFF00E5FF).copy(alpha = 0.5f)
-                                SDKStatus.READY -> Color(0xFF00FF00)
-                            }
-                        )
-                )
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            // Time Display
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = getCurrentTime(),
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 72.sp,
-                    color = Color(0xFF00E5FF)
-                )
-                
-                Text(
-                    text = getCurrentDate(),
-                    fontFamily = FontFamily.SansSerif,
-                    fontSize = 18.sp,
-                    color = Color.White.copy(alpha = 0.7f),
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-                
-                Text(
-                    text = getCurrentSeconds(),
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 24.sp,
-                    color = Color(0xFF00E5FF).copy(alpha = 0.8f),
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            // Battery Indicator
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "Battery: ${batteryLevel}%",
-                    fontSize = 14.sp,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-            }
-            
-            // Bottom bar with mic button
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                IconButton(
-                    onClick = { 
-                        cameraManager = CameraManager()
-                        onMicClick()
-                    },
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF1A1A1A))
-                        .border(2.dp, Color(0xFF00E5FF), CircleShape)
-                ) {
-                    Text("mic", fontSize = 14.sp)
-                }
-            }
-        }
-        
-        // Circular border for round screen
-        Canvas(
+
+    AdaptiveLayout {
+        val cfg = LocalScreenConfig.current
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(4.dp)
+                .background(Color(0xFF0D0D0D))
         ) {
-            drawCircle(
-                color = Color(0xFF00E5FF).copy(alpha = 0.3f),
-                radius = size.minDimension / 2,
-                style = Stroke(width = 2.dp.toPx())
-            )
-        }
-        
-        // Camera Overlay
-        if (showCameraOverlay && cameraManager != null) {
-            CameraOverlay(
-                onCapturePhoto = { photoFile ->
-                    onPhotoCaptured(photoFile)
-                },
-                onAskAboutPhoto = { photoFile ->
-                    val query = cameraManager?.constructVisionQuery("What is in this image?")
-                    query?.let { onVisionQuery(it) }
-                },
-                onCloseCamera = {
-                    showCameraOverlay = false
-                    cameraManager?.clearPhotoUri()
-                },
-                isShowing = showCameraOverlay
-            )
-        }
-        
-        // Vision Response Overlay
-        visionResponse?.let { response ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.8f))
+                    .padding(horizontal = cfg.edgePadding),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
+                // Top bar: AI status + camera button
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(32.dp),
+                        .padding(
+                            top = if (cfg.isWatch) 20.dp else cfg.edgePadding,
+                            bottom = cfg.itemSpacing
+                        ),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // AI Status dot
+                    Box(
+                        modifier = Modifier
+                            .size(cfg.statusDotSize)
+                            .clip(CircleShape)
+                            .background(
+                                when (sdkStatus) {
+                                    SDKStatus.NOT_LOADED -> Color(0xFF666666)
+                                    SDKStatus.THINKING -> Color(0xFF00E5FF).copy(alpha = 0.5f)
+                                    SDKStatus.READY -> Color(0xFF00FF00)
+                                }
+                            )
+                    )
+
+                    // Camera button — hidden on watch to save space
+                    if (!cfg.isWatch) {
+                        IconButton(
+                            onClick = {
+                                showCameraOverlay = true
+                                cameraManager = CameraManager()
+                                onCameraClick()
+                            },
+                            modifier = Modifier
+                                .size(cfg.secondaryButtonSize)
+                                .clip(CircleShape)
+                                .background(Color(0xFF1A1A1A))
+                        ) {
+                            Text("CAM", fontSize = cfg.captionFontSize, color = Color.White)
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.size(cfg.statusDotSize))
+                    }
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Time Display — centered
+                Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Response:",
-                        fontSize = 20.sp,
-                        color = Color(0xFF00E5FF),
-                        fontWeight = FontWeight.Bold
+                        text = getCurrentTime(),
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = cfg.timeFontSize,
+                        color = Color(0xFF00E5FF)
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+
                     Text(
-                        text = response,
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        fontFamily = FontFamily.SansSerif
+                        text = getCurrentDate(),
+                        fontFamily = FontFamily.SansSerif,
+                        fontSize = cfg.dateFontSize,
+                        color = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(top = if (cfg.isWatch) 2.dp else 8.dp)
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+
                     Text(
-                        text = "Tap to close",
-                        fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.7f)
+                        text = getCurrentSeconds(),
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = cfg.secondsFontSize,
+                        color = Color(0xFF00E5FF).copy(alpha = 0.8f),
+                        modifier = Modifier.padding(top = 2.dp)
                     )
+                }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Battery
+                Text(
+                    text = if (cfg.isWatch) "${batteryLevel}%" else "Battery: ${batteryLevel}%",
+                    fontSize = cfg.captionFontSize,
+                    color = Color.White.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(bottom = cfg.itemSpacing)
+                )
+
+                // Bottom bar: mic button (+ camera on watch)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = if (cfg.isWatch) 16.dp else cfg.edgePadding),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Camera button on watch — small, beside mic
+                    if (cfg.isWatch) {
+                        IconButton(
+                            onClick = {
+                                showCameraOverlay = true
+                                cameraManager = CameraManager()
+                                onCameraClick()
+                            },
+                            modifier = Modifier
+                                .size(cfg.secondaryButtonSize)
+                                .clip(CircleShape)
+                                .background(Color(0xFF1A1A1A))
+                        ) {
+                            Text("C", fontSize = cfg.captionFontSize, color = Color(0xFF00E5FF))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                    }
+
+                    IconButton(
+                        onClick = {
+                            cameraManager = CameraManager()
+                            onMicClick()
+                        },
+                        modifier = Modifier
+                            .size(cfg.primaryButtonSize)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1A1A1A))
+                            .border(2.dp, Color(0xFF00E5FF), CircleShape)
+                    ) {
+                        Text("MIC", fontSize = cfg.captionFontSize, color = Color(0xFF00E5FF))
+                    }
+
+                    if (cfg.isWatch) {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.size(cfg.secondaryButtonSize))
+                    }
+                }
+            }
+
+            // Circular border for round watch screen
+            if (cfg.isWatch) {
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(2.dp)
+                ) {
+                    drawCircle(
+                        color = Color(0xFF00E5FF).copy(alpha = 0.3f),
+                        radius = size.minDimension / 2,
+                        style = Stroke(width = 1.dp.toPx())
+                    )
+                }
+            }
+
+            // Camera Overlay
+            if (showCameraOverlay && cameraManager != null) {
+                CameraOverlay(
+                    onCapturePhoto = { photoFile ->
+                        onPhotoCaptured(photoFile)
+                    },
+                    onAskAboutPhoto = { photoFile ->
+                        val query = cameraManager?.constructVisionQuery("What is in this image?")
+                        query?.let { onVisionQuery(it) }
+                    },
+                    onCloseCamera = {
+                        showCameraOverlay = false
+                        cameraManager?.clearPhotoUri()
+                    },
+                    isShowing = showCameraOverlay
+                )
+            }
+
+            // Vision Response Overlay
+            visionResponse?.let { response ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.85f))
+                        .clickable { visionResponse = null }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(if (cfg.isWatch) 24.dp else 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Response",
+                            fontSize = if (cfg.isWatch) cfg.headerFontSize else 20.sp,
+                            color = Color(0xFF00E5FF),
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(cfg.itemSpacing))
+                        Text(
+                            text = response,
+                            fontSize = cfg.bodyFontSize,
+                            color = Color.White,
+                            fontFamily = FontFamily.SansSerif
+                        )
+                        Spacer(modifier = Modifier.height(cfg.itemSpacing))
+                        Text(
+                            text = "Tap to close",
+                            fontSize = cfg.captionFontSize,
+                            color = Color.White.copy(alpha = 0.5f)
+                        )
+                    }
                 }
             }
         }

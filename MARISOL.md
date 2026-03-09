@@ -51,6 +51,22 @@ cd examples/android/RunAnywhereWatch
 - **Android SDK**: `/opt/android-sdk` (platforms, build-tools, cmdline-tools)
 - **Resources**: 8192MB memory, 4 CPUs (Gradle is memory-hungry)
 
+## Adaptive UI
+
+All screens use `ScreenConfig.kt` with `AdaptiveLayout` composable — auto-detects watch (<230dp) vs phone via `BoxWithConstraints`.
+
+| Property | Watch | Phone |
+|----------|-------|-------|
+| Time font | 34sp | 64sp |
+| Body font | 11sp | 14sp |
+| Primary button | 36dp | 64dp |
+| Edge padding | 8dp | 16dp |
+| Camera preview | 120dp | 280dp |
+| Camera button | Top bar | Bottom bar (beside mic) |
+| Transcription lines | 2 max | 4 max |
+
+Watch screens use 20dp horizontal padding for round safe area. Camera's Quick Ask button is inline with capture on watch.
+
 ## Screenshot Testing
 
 Paparazzi renders actual Compose UI to PNG via Android's `layoutlib` — no emulator needed.
@@ -61,13 +77,22 @@ cd examples/android/RunAnywhereWatch
 ./gradlew :app:verifyPaparazziDebug --no-daemon    # verify against golden files
 ```
 
+### Watch Screenshots (WEAR_OS_SMALL_ROUND)
 | Screenshot | Description |
 |-----------|-------------|
-| `WatchFaceScreenshots_watchFace_defaultState` | Main watch face — time, battery, mic/camera buttons, AI status LED |
-| `TranscriptionScreenshots_transcriptionScreen_withEntries` | Timestamped transcription cards with source badges |
-| `TranscriptionScreenshots_transcriptionScreen_empty` | Empty state with "Tap the mic to start" prompt |
-| `TranscriptionScreenshots_transcriptionScreen_lowConfidence` | Low confidence indicator (65%) on voice transcription |
-| `CameraOverlayScreenshots_cameraOverlay_viewfinder` | Camera viewfinder with Quick Ask, capture button, close |
+| `watchFace_watch_default` | Time (34sp), date, seconds, MIC + C buttons, AI status dot |
+| `transcription_watch_empty` | Empty state — "Tap the mic to start" |
+| `transcription_watch_withEntries` | Cards with timestamps, source badges within round safe area |
+| `transcription_watch_lowConfidence` | 65% confidence indicator on voice transcription |
+| `camera_watch_viewfinder` | 120dp preview, ? + capture buttons at bottom, X close |
+
+### Phone Screenshots (PIXEL_5)
+| Screenshot | Description |
+|-----------|-------------|
+| `watchFace_phone_default` | Full layout — 64sp time, CAM top-right, MIC bottom-center |
+| `transcription_phone_empty` | Empty state with full header |
+| `transcription_phone_withEntries` | 4 cards — voice, system source badges, 72% confidence |
+| `camera_phone_viewfinder` | 280dp preview, Quick Ask sidebar, large capture button |
 
 Golden files: `app/src/test/snapshots/images/`
 
@@ -82,7 +107,7 @@ GitHub Actions — 3 workflows:
 2. **SDK JVM Tests** — `./gradlew :runanywhere-kotlin:jvmTest`, 53 tests (needs Android SDK setup)
 
 ### Screenshots (`.github/workflows/screenshots.yml`) — 1 job:
-1. **Generate Screenshots** — `./gradlew :app:recordPaparazziDebug`, 8 screenshots uploaded as artifacts
+1. **Generate Screenshots** — `./gradlew :app:recordPaparazziDebug`, 9 screenshots (5 watch + 4 phone) uploaded as artifacts
 
 ## Known Issues
 
@@ -94,6 +119,7 @@ GitHub Actions — 3 workflows:
 - **Getter naming**: Kotlin auto-generates `getX()` for `val x` — test helper methods must use different names to avoid "accidental override"
 - **Paparazzi x86-only**: Uses Android `layoutlib` (x86_64 native). Cannot run on ARM64 — CI only
 - **gradle.properties gitignored**: Root `.gitignore` blocks `gradle.properties`. Use `git add -f` for project-level properties
+- **Adaptive UI threshold**: `BoxWithConstraints` < 230dp = watch. Wear OS Small Round = ~192dp, phones = 360dp+
 
 ## Qwen3.5-0.8B On-Device LLM
 
@@ -115,6 +141,7 @@ Fully implemented via llama.cpp C++ backend:
 | 2026-03-09 | CI expanded | Added SDK JVM test job alongside watch tests |
 | 2026-03-09 | PRs #26 + #27 merged | Both PRs merged to main, all CI green |
 | 2026-03-09 | PR #28 (screenshots) | Paparazzi screenshot tests — 8 real UI renders of all watch screens |
+| 2026-03-09 | PR #29 (responsive UI) | Adaptive watch/phone layouts, ScreenConfig.kt, 9 screenshots (5 watch + 4 phone) |
 
 ## Notes
 
