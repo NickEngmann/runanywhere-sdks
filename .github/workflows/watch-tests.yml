@@ -1,4 +1,4 @@
-name: Watch App Tests
+name: Tests
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  watch-tests:
+    name: Watch App JVM Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,10 +25,10 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-watch-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
 
-      - name: Run JVM tests
+      - name: Run Watch JVM tests
         working-directory: examples/android/RunAnywhereWatch
         run: ./gradlew :tests-jvm:test --no-daemon --stacktrace
 
@@ -35,5 +36,43 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
+          name: watch-test-results
           path: examples/android/RunAnywhereWatch/tests-jvm/build/reports/tests/
+
+  sdk-tests:
+    name: SDK JVM Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK platforms
+        run: |
+          sdkmanager "platforms;android-35" "platforms;android-36" "build-tools;35.0.0" "build-tools;36.0.0" 2>&1 | tail -5
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-sdk-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Run SDK JVM tests
+        run: ./gradlew :runanywhere-kotlin:jvmTest --no-daemon --stacktrace
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-test-results
+          path: sdk/runanywhere-kotlin/build/reports/tests/
