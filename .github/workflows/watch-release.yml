@@ -2,6 +2,7 @@ name: Watch App Release
 
 on:
   push:
+    branches: [main]
     tags:
       - 'watch-v*'
   workflow_dispatch:
@@ -22,22 +23,22 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      
+
       - name: Create local.properties
         run: echo "sdk.dir=$ANDROID_HOME" > local.properties
-      
+
       - name: Cache Gradle packages
         uses: actions/cache@v4
         with:
@@ -46,33 +47,49 @@ jobs:
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: ${{ runner.os }}-gradle-
-      
+
       - name: Make gradlew executable
         run: chmod +x gradlew
-      
+
       - name: Run JVM tests
-        run: ./gradlew :tests-jvm:test
-      
-      - name: Build APK
-        run: |
-          BUILD_TYPE="${{ github.event.inputs.build_type || 'release' }}"
-          if [ "$BUILD_TYPE" = "debug" ]; then
-            ./gradlew assembleDebug
-          else
-            ./gradlew assembleRelease
-          fi
-      
+        run: ./gradlew :tests-jvm:test --no-daemon
+
+      - name: Run Robolectric tests
+        run: ./gradlew :app:testDebugUnitTest --no-daemon
+
+      - name: Build debug APK
+        if: ${{ !startsWith(github.ref, 'refs/tags/watch-v') && github.event.inputs.build_type != 'release' }}
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Build release APK
+        if: ${{ startsWith(github.ref, 'refs/tags/watch-v') || github.event.inputs.build_type == 'release' }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Get short SHA
+        id: sha
+        run: echo "short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: watch-apk-${{ github.event.inputs.build_type || 'release' }}
+          name: watch-apk-${{ steps.sha.outputs.short }}
           path: examples/android/RunAnywhereWatch/app/build/outputs/apk/**/*.apk
-          retention-days: 30
-      
-      - name: Create GitHub Release
+          retention-days: 90
+
+      - name: Create GitHub Release (tagged)
         if: startsWith(github.ref, 'refs/tags/watch-v')
         uses: softprops/action-gh-release@v2
         with:
           files: examples/android/RunAnywhereWatch/app/build/outputs/apk/**/*.apk
           generate_release_notes: true
           draft: true
+
+      - name: Create GitHub Release (main merge)
+        if: ${{ github.ref == 'refs/heads/main' && !startsWith(github.ref, 'refs/tags/') }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: watch-dev-${{ steps.sha.outputs.short }}
+          name: "Watch Dev Build (${{ steps.sha.outputs.short }})"
+          files: examples/android/RunAnywhereWatch/app/build/outputs/apk/**/*.apk
+          generate_release_notes: true
+          prerelease: true

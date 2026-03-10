@@ -43,6 +43,15 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                // Disable Conscrypt — its native JNI only ships x86_64, fails on ARM64
+                it.jvmArgs("-Dorg.conscrypt.disable=true")
+            }
+        }
+    }
 }
 
 dependencies {
@@ -59,6 +68,10 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.junit)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
