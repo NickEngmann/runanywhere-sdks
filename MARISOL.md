@@ -111,16 +111,48 @@ Golden files: `app/src/test/snapshots/images/`
 
 If screenshots show usability problems, fix the `ScreenConfig.kt` values and re-run `recordPaparazziDebug` until everything fits well and is usable on both form factors.
 
+## Robolectric Integration Tests
+
+Robolectric runs the real Android framework on JVM — verifies the app actually launches and features work without needing a device or emulator.
+
+```bash
+cd examples/android/RunAnywhereWatch
+./gradlew :app:testDebugUnitTest --no-daemon   # run Robolectric + Paparazzi tests
+```
+
+### What's tested:
+- **App launch**: MainActivity creates and reaches RESUMED state
+- **Screen rendering**: WatchFace, Camera, Transcription screens all render
+- **Button interactions**: MIC, CAM, close, back, clear, Quick Ask all trigger callbacks
+- **Lifecycle**: Survives configuration change, pause/resume, stop/restart
+- **Camera flow**: Open overlay → capture → close overlay
+- **Transcription features**: Empty state, entries, source badges, low confidence indicator
+
+### Robolectric vs Instrumented Tests
+| | Robolectric (`app/src/test/`) | Instrumented (`app/src/androidTest/`) |
+|---|---|---|
+| Runs on | JVM (CI, ARM64, anywhere) | Real device / emulator only |
+| Speed | Fast (~10s) | Slow (~60s+) |
+| Tests | App logic, UI rendering, lifecycle | Hardware, sensors, real camera |
+| Affects APK | No (`testImplementation`) | No (`androidTestImplementation`) |
+
 ## CI/CD
 
-GitHub Actions — 3 workflows:
+GitHub Actions — 4 workflows:
 
-### Tests (`.github/workflows/watch-tests.yml`) — 2 jobs:
+### Tests (`.github/workflows/watch-tests.yml`) — 3 jobs:
 1. **Watch App JVM Tests** — `./gradlew :tests-jvm:test`, 334 tests
-2. **SDK JVM Tests** — `./gradlew :runanywhere-kotlin:jvmTest`, 53 tests (needs Android SDK setup)
+2. **Watch App Robolectric Tests** — `./gradlew :app:testDebugUnitTest`, app launch + UI verification
+3. **SDK JVM Tests** — `./gradlew :runanywhere-kotlin:jvmTest`, 53 tests (needs Android SDK setup)
 
 ### Screenshots (`.github/workflows/screenshots.yml`) — 1 job:
 1. **Generate Screenshots** — `./gradlew :app:recordPaparazziDebug`, 9 screenshots (5 watch + 4 phone) uploaded as artifacts
+
+### Release (`.github/workflows/watch-release.yml`) — auto on merge to main:
+1. **Runs all tests** (JVM + Robolectric) before building
+2. **Builds debug APK** on main merges, release APK on `watch-v*` tags
+3. **Creates GitHub Release** — pre-release with APK artifact on every main merge, draft release on tags
+4. **APK download**: Go to GitHub Releases or Actions artifacts to install on device
 
 ## Known Issues
 
@@ -156,6 +188,7 @@ Fully implemented via llama.cpp C++ backend:
 | 2026-03-09 | PR #28 (screenshots) | Paparazzi screenshot tests — 8 real UI renders of all watch screens |
 | 2026-03-09 | PR #29 (responsive UI) | Adaptive watch/phone layouts, ScreenConfig.kt, 9 screenshots (5 watch + 4 phone) |
 | 2026-03-09 | PR #30 (UI polish) | Watch centering, smaller buttons, bezel-safe back/close, dark bg icon buttons |
+| 2026-03-09 | PR #31 (Robolectric + releases) | App launch verification, Compose UI tests, auto-release APK on merge |
 
 ## Notes
 

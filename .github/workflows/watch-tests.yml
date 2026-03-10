@@ -39,6 +39,41 @@ jobs:
           name: watch-test-results
           path: examples/android/RunAnywhereWatch/tests-jvm/build/reports/tests/
 
+  app-tests:
+    name: Watch App Robolectric Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-app-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      - name: Run Robolectric tests
+        working-directory: examples/android/RunAnywhereWatch
+        run: ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robolectric-test-results
+          path: examples/android/RunAnywhereWatch/app/build/reports/tests/
+
   sdk-tests:
     name: SDK JVM Tests
     runs-on: ubuntu-latest
