@@ -46,6 +46,10 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            all {
+                // Disable Conscrypt — its native JNI only ships x86_64, fails on ARM64
+                it.jvmArgs("-Dorg.conscrypt.disable=true")
+            }
         }
     }
 }
