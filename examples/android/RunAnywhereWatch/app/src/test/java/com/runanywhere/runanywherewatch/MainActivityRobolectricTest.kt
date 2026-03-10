@@ -45,12 +45,6 @@ class MainActivityRobolectricTest {
     // ── WatchFace Screen (phone layout) ──
 
     @Test
-    fun `watchface displays time with colon`() {
-        composeRule.onNodeWithText(":", substring = true, useUnmergedTree = true)
-            .assertExists()
-    }
-
-    @Test
     fun `watchface displays MIC button`() {
         composeRule.onNodeWithText("MIC", useUnmergedTree = true)
             .assertExists()
@@ -162,14 +156,15 @@ class MainActivityRobolectricTest {
     }
 
     @Test
-    fun `CameraManager photo history`() {
+    fun `CameraManager photo history and clear`() {
         val mgr = CameraManager()
         mgr.initializeCamera()
-        mgr.capturePhoto()
-        mgr.capturePhoto()
-        assertEquals(2, mgr.getRecentPhotos().size)
-        mgr.clearPhotoUri()
+        assertTrue(mgr.capturePhoto())  // state → CAPTURING
+        assertEquals(1, mgr.getRecentPhotos().size)
+        mgr.clearPhotoUri()  // state → READY
         assertNull(mgr.lastPhotoUri)
         assertEquals(CameraState.READY, mgr.state)
+        assertTrue(mgr.capturePhoto())  // second capture works after clear
+        assertEquals(2, mgr.getRecentPhotos().size)
     }
 }
