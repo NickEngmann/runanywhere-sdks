@@ -116,12 +116,12 @@ export const MAX_PAGE_TEXT_LENGTH = 1500;
  * Amazon URL patterns for state detection
  */
 export const AMAZON_URL_PATTERNS = {
-  homepage: /^https?:\/\/(www\.)?amazon\.(com|co\.[a-z]{2}|[a-z]{2})\/?$/,
+  homepage: /^https?:\/\/(www\.)?amazon\.(com|co\.uk|de|fr|it|es|jp|cn|in)\/?$/,
   search: /\/s\?/,
   product: /\/(dp|gp\/product)\//,
   cart: /\/gp\/cart/,
   signin: /\/ap\/signin/,
-  checkout: /\/gp\/buy/,
+  checkout: /\/(gp\/buy|checkout)/,
 };
 
 /**
