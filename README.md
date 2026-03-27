@@ -398,6 +398,89 @@ open RunAnywhereAI.xcodeproj
 
 ---
 
+## SDK Technical Details
+
+### Version Information
+
+| SDK | Version | Release Date | Source |
+|-----|---------|--------------|--------|
+| Swift (iOS/macOS) | 0.19.6 | Latest | [Package.swift](Package.swift) |
+| Kotlin (Android) | 0.1.0 | Latest | [build.gradle.kts](build.gradle.kts) |
+| Web (TypeScript) | 0.1.0-beta.9 | Latest | [sdk/runanywhere-web/package.json](sdk/runanywhere-web/packages/core/package.json) |
+| React Native | 0.1.0-beta.9 | Latest | [sdk/runanywhere-react-native/package.json](sdk/runanywhere-react-native/package.json) |
+| Flutter | 0.15.11 | Latest | [docs/runanywhere-flutter/README.md](docs/) |
+
+### Build Configuration
+
+- **Kotlin/Android**: Gradle 8.11.2, Kotlin 2.1.21, Jetpack Compose 2025.08.01
+- **Swift/iOS**: Swift 5.9, iOS 17.0+, macOS 14.0+, Xcode 15.0+
+- **Web/TypeScript**: TypeScript 5.6.0, Node.js >=18.0.0, Chrome 96+ (WebGPU 120+ recommended)
+- **C++ Core**: CMake 3.22+, Emscripten 5.0.0+ (for WASM builds)
+
+### Runtime Dependencies
+
+**LLM Inference (llama.cpp):**
+- SmolLM2 360M (~400MB, 500MB RAM)
+- Qwen 2.5 0.5B (~500MB, 600MB RAM)
+- Llama 3.2 1B (~1GB, 1.2GB RAM)
+- Mistral 7B Q4 (~4GB, 5GB RAM)
+
+**Speech-to-Text (whisper.cpp):**
+- Whisper Tiny (~75MB, English)
+- Whisper Base (~150MB, Multilingual)
+
+**Text-to-Speech (sherpa-onnx/Piper):**
+- Piper US English (~65MB)
+- Piper British English (~65MB)
+
+**Vision Language Models:**
+- Qwen2-VL (requires WebGPU)
+
+## Contributing
+
+We welcome contributions. See our [Contributing Guide](CONTRIBUTING.md) for details.
+
+```bash
+# Clone the repo
+git clone https://github.com/RunanywhereAI/runanywhere-sdks.git
+
+# Set up a specific SDK (example: Swift)
+cd sdk/runanywhere-swift
+./scripts/build-swift.sh --setup
+
+# Run the sample app
+cd examples/ios/RunAnywhereAI
+open RunAnywhereAI.xcodeproj
+```
+
+### Development Setup
+
+**Android/Kotlin:**
+```bash
+cd sdk/runanywhere-kotlin
+./gradlew buildSdk
+```
+
+**Swift/iOS:**
+```bash
+cd sdk/runanywhere-swift
+./scripts/build-swift.sh --setup --include-macos
+```
+
+**Web/TypeScript:**
+```bash
+cd sdk/runanywhere-web
+npm install
+npm run build:ts
+```
+
+**WASM Build:**
+```bash
+cd sdk/runanywhere-web/wasm
+./scripts/setup-emsdk.sh
+./scripts/build.sh --all-backends
+```
+
 ## Support
 
 - **Discord:** [Join our community](https://discord.gg/N359FBbDVd)

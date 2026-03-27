@@ -85,9 +85,27 @@ export class VoiceAgentSession {
    *
    * TODO: Delegate to backend provider via ExtensionPoint.
    */
+<<<<<<< Updated upstream
   async transcribe(_audioData: Uint8Array): Promise<string> {
     // TODO: Invoke backend-specific STT provider.
     throw SDKError.componentNotReady('VoiceAgent', 'No WASM backend registered — use a backend package (e.g. @runanywhere/web-llamacpp)');
+=======
+  async transcribe(audioData: Uint8Array): Promise<string> {
+    if (this._isDestroyed) {
+      throw SDKError.internal('VoiceAgentSession', 'Session has been destroyed');
+    }
+
+    const sttModel = this._models.get('stt');
+    if (!sttModel) {
+      throw SDKError.modelNotLoaded('VoiceAgent', 'STT model not loaded');
+    }
+
+    logger.info(`Transcribing audio (${audioData.length} bytes) with ${sttModel.id}`);
+
+    const transcription = await this._simulateTranscribe(audioData);
+    this._emitEvent({ type: 'transcription', text: transcription });
+    return transcription;
+>>>>>>> Stashed changes
   }
 
   /**
@@ -100,6 +118,7 @@ export class VoiceAgentSession {
     throw SDKError.componentNotReady('VoiceAgent', 'No WASM backend registered — use a backend package (e.g. @runanywhere/web-llamacpp)');
   }
 
+<<<<<<< Updated upstream
   /** Get the native handle (used by backend providers). */
   get handle(): number {
     return this._handle;
@@ -109,6 +128,77 @@ export class VoiceAgentSession {
    * Destroy the voice agent session.
    *
    * TODO: Delegate cleanup to backend provider via ExtensionPoint.
+=======
+    const llmModel = this._models.get('llm');
+    if (!llmModel) {
+      throw SDKError.modelNotLoaded('VoiceAgent', 'LLM model not loaded');
+    }
+
+    logger.info(`Generating response with ${llmModel.id} for prompt: ${prompt.substring(0, 50)}...`);
+
+    const response = await this._simulateGeneration(prompt);
+    this._emitEvent({ type: 'response', text: response });
+    return response;
+  }
+
+  /**
+   * Synthesize speech from text.
+   */
+  async synthesizeSpeech(text: string): Promise<Float32Array> {
+    if (this._isDestroyed) {
+      throw SDKError.internal('VoiceAgentSession', 'Session has been destroyed');
+    }
+
+    const ttsModel = this._models.get('tts');
+    if (!ttsModel) {
+      throw SDKError.modelNotLoaded('VoiceAgent', 'TTS model not loaded');
+    }
+
+    logger.info(`Synthesizing speech with ${ttsModel.id}`);
+
+    const audioData = await this._simulateSynthesis(text);
+    this._emitEvent({ type: 'audioSynthesized', audioData });
+    return audioData;
+  }
+
+  /**
+   * Register event callback for pipeline events.
+   */
+  onEvent(callback: VoiceAgentEventCallback): void {
+    this._eventCallbacks.push(callback);
+  }
+
+  /**
+   * Unregister event callback.
+   */
+  offEvent(callback: VoiceAgentEventCallback): void {
+    const index = this._eventCallbacks.indexOf(callback);
+    if (index !== -1) {
+      this._eventCallbacks.splice(index, 1);
+    }
+  }
+
+  /**
+   * Get current pipeline state.
+   */
+  getState(): PipelineState {
+    return this._state;
+  }
+
+  /**
+   * Get loaded models.
+   */
+  getModels(): VoiceAgentModels {
+    return {
+      stt: this._models.get('stt') || undefined,
+      llm: this._models.get('llm') || undefined,
+      tts: this._models.get('tts') || undefined,
+    };
+  }
+
+  /**
+   * Destroy the voice agent session and cleanup resources.
+>>>>>>> Stashed changes
    */
   destroy(): void {
     // TODO: Invoke backend-specific cleanup.
