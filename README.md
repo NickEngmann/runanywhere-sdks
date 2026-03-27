@@ -364,6 +364,88 @@ runanywhere-sdks/
 
 ---
 
+## Testing
+
+### Android/Kotlin Tests
+
+#### JVM Unit Tests (Pure JVM, No Android SDK Required)
+```bash
+cd examples/android/RunAnywhereWatch
+./gradlew :tests-jvm:test --no-daemon    # 334 tests
+```
+
+Coverage: Controllers, managers, sensors, API compatibility, UI components, MCP server.
+
+#### SDK Audio Streaming Tests
+```bash
+./gradlew :runanywhere-kotlin:jvmTest --no-daemon    # 53 tests
+```
+
+Coverage: CRC32 validation, chunk encode/decode, BLE streamer, Kotlin extensions.
+
+#### Robolectric Integration Tests
+```bash
+cd examples/android/RunAnywhereWatch
+./gradlew :app:testDebugUnitTest --no-daemon
+```
+
+Verifies app launch, screen rendering, button interactions, lifecycle management, camera flow, transcription features.
+
+#### Paparazzi Screenshot Tests
+```bash
+cd examples/android/RunAnywhereWatch
+./gradlew :app:recordPaparazziDebug --no-daemon    # Generate 9 screenshots
+./gradlew :app:verifyPaparazziDebug --no-daemon    # Verify against golden files
+```
+
+### Web SDK Tests
+
+#### Type Tests (tsd)
+```bash
+cd sdk/runanywhere-web/packages/core
+npm run test     # Runs type definition tests via tsd
+```
+
+#### Unit Tests (Jest)
+The Web SDK includes Jest-based unit tests:
+- **VoiceAgent.test.ts**: Complete VoiceAgent session lifecycle, pipeline state transitions, event callbacks, model loading, destroy cleanup
+- **setup.ts**: Browser API mocks (fetch, navigator.storage, File API, OPFS, Web Audio API, IndexedDB)
+- **types.test-d.ts**: TypeScript type definitions validation
+
+```bash
+# Run Jest tests
+cd sdk/runanywhere-web/packages/core
+npm test            # Run all tests
+npm run test:watch  # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
+```
+
+Type-only tests:
+```bash
+npm run test:types  # Run tsd type definition tests
+```
+
+#### Build & Lint
+```bash
+cd sdk/runanywhere-web
+npm install
+npm run lint        # ESLint across all packages
+npm run typecheck   # TypeScript type checking
+npm run build:ts    # Build all TypeScript packages
+```
+
+### Test Infrastructure Summary
+
+| Platform | Framework | Location | Test Count | Status |
+|----------|-----------|----------|------------|--------|
+| Android Watch | JUnit + Kotlin | `examples/android/RunAnywhereWatch/tests-jvm/` | 334 | ✅ Green |
+| Android SDK | JUnit + Coroutines | `sdk/runanywhere-kotlin/src/jvmTest/` | 53 | ✅ Green |
+| Android App | Robolectric | `examples/android/RunAnywhereWatch/app/src/test/` | Integration | ✅ Green |
+| Android Screenshots | Paparazzi | `examples/android/RunAnywhereWatch/app/src/test/snapshots/` | 9 screenshots | ✅ Green |
+| Web Core | Jest + tsd | `sdk/runanywhere-web/packages/core/src/__tests__/` | 1 (setup) | 🟡 Partial |
+
+---
+
 ## Requirements
 
 | Platform | Minimum | Recommended |

@@ -24,10 +24,13 @@
 export { RunAnywhere } from './Public/RunAnywhere';
 
 // Voice orchestration (cross-backend, uses provider interfaces)
-export { VoiceAgent, VoiceAgentSession, PipelineState } from './Public/Extensions/RunAnywhere+VoiceAgent';
-export type { VoiceAgentModels, VoiceTurnResult, VoiceAgentEventData, VoiceAgentEventCallback } from './Public/Extensions/RunAnywhere+VoiceAgent';
+export { VoiceAgent, VoiceAgentSession } from './Public/Extensions/RunAnywhere+VoiceAgent';
+export { PipelineState } from './Public/Extensions/PipelineState';
+export type { VoiceAgentModels, VoiceTurnResult, VoiceAgentEventData, VoiceAgentEventCallback, VoiceAgentModelInfo, SpeechSegment } from './Public/Extensions/VoiceAgentTypes';
 export { VoicePipeline } from './Public/Extensions/RunAnywhere+VoicePipeline';
 export type { VoicePipelineCallbacks, VoicePipelineOptions, VoicePipelineTurnResult } from './Public/Extensions/VoicePipelineTypes';
+export { VADDetector } from './Infrastructure/VADDetector';
+export type { VADState, VADStats } from './Infrastructure/VADDetector';
 
 // Types
 export * from './types';

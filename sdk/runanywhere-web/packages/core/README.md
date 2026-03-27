@@ -800,13 +800,13 @@ optimizeDeps: {
 
 ## Known Limitations (Beta)
 
-- No test suite yet (planned for v0.2.0)
-- No model hash verification on download
-- WASM memory allocations in some extension methods lack guaranteed cleanup via `finally` blocks (low probability, planned fix)
-- VLM inference is single-threaded (one frame at a time)
-- No streaming TTS (audio returns all-at-once)
-- Safari OPFS support is unreliable
-- Mobile browsers have limited memory for large models
+- **Limited test coverage**: Only VoiceAgent.test.ts exists (Jest + ts-jest configured for v0.2.0)
+- **No model hash verification on download**
+- **WASM memory allocations** in some extension methods lack guaranteed cleanup via `finally` blocks (low probability, planned fix)
+- **VLM inference is single-threaded** (one frame at a time)
+- **No streaming TTS** (audio returns all-at-once)
+- **Safari OPFS support is unreliable**
+- **Mobile browsers have limited memory** for large models
 
 ---
 

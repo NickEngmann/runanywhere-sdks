@@ -118,6 +118,34 @@ export class SDKError extends Error {
       details,
     );
   }
+
+  static modelNotLoaded(component: string, modelType: string): SDKError {
+    return new SDKError(
+      SDKErrorCode.ModelNotLoaded,
+      `${modelType} model not loaded in ${component}`,
+    );
+  }
+
+  static internal(component: string, message: string): SDKError {
+    return new SDKError(
+      SDKErrorCode.InvalidState,
+      `[${component}] ${message}`,
+    );
+  }
+
+  static downloadFailed(modelId: string): SDKError {
+    return new SDKError(
+      SDKErrorCode.DownloadFailed,
+      `Failed to download model: ${modelId}`,
+    );
+  }
+
+  static storageError(message: string): SDKError {
+    return new SDKError(
+      SDKErrorCode.StorageError,
+      message,
+    );
+  }
 }
 
 /** Type guard: returns true if the value is an SDKError instance. */
