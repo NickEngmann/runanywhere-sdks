@@ -26,14 +26,14 @@
 import { SDKLogger } from '../../Foundation/SDKLogger';
 import { ExtensionPoint } from '../../Infrastructure/ExtensionPoint';
 import type { LLMProvider, STTProvider, TTSProvider } from '../../Infrastructure/ProviderTypes';
-import { PipelineState } from './VoiceAgentTypes';
+import { PipelineState } from './PipelineState';
 import type {
   VoicePipelineCallbacks,
   VoicePipelineOptions,
   VoicePipelineTurnResult,
 } from './VoicePipelineTypes';
 
-export { PipelineState } from './VoiceAgentTypes';
+export { PipelineState } from './PipelineState';
 export type {
   VoicePipelineCallbacks,
   VoicePipelineOptions,
