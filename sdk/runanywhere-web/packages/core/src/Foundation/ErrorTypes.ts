@@ -111,6 +111,20 @@ export class SDKError extends Error {
     );
   }
 
+  static modelNotLoaded(component: string, details?: string): SDKError {
+    return new SDKError(
+      SDKErrorCode.ModelNotLoaded,
+      `Model not loaded for ${component}: ${details}`,
+    );
+  }
+
+  static internal(component: string, details?: string): SDKError {
+    return new SDKError(
+      SDKErrorCode.InvalidState,
+      `Internal error in ${component}: ${details}`,
+    );
+  }
+
   static generationFailed(details?: string): SDKError {
     return new SDKError(
       SDKErrorCode.GenerationFailed,
